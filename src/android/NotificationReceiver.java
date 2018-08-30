@@ -38,8 +38,9 @@ public class NotificationReceiver extends BroadcastReceiver implements IDcsSdkAp
 
 
 		BarcodeScanner.sdkHandler.dcssdkEnableAvailableScannersDetection(true);
-		BarcodeScanner.sdkHandler.dcssdkSetOperationalMode(DCSSDKDefs.DCSSDK_MODE.DCSSDK_OPMODE_SNAPI);
-		BarcodeScanner.sdkHandler.dcssdkSubsribeForEvents(notifications_mask);
+    BarcodeScanner.sdkHandler.dcssdkSetOperationalMode(DCSSDKDefs.DCSSDK_MODE.DCSSDK_OPMODE_SNAPI);
+    BarcodeScanner.sdkHandler.dcssdkSetOperationalMode(DCSSDKDefs.DCSSDK_MODE.DCSSDK_OPMODE_BT_NORMAL);
+    BarcodeScanner.sdkHandler.dcssdkSubsribeForEvents(notifications_mask);
 
 		BarcodeScanner.sdkHandler.dcssdkSetDelegate(this);
 	}

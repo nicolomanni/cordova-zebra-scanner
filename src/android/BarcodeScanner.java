@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.io.ByteArrayOutputStream;
 
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -25,13 +26,17 @@ import com.zebra.scannercontrol.DCSScannerInfo;
 import com.zebra.scannercontrol.BarCodeView;
 
 public class BarcodeScanner extends CordovaPlugin {
+
 	public static SDKHandler sdkHandler;	// Zebra SDK internal
 	public static NotificationReceiver notificationReceiver;
-	public static CallbackContext eventEmitter;
+  public static CallbackContext eventEmitter;
 
 	// Barcode scanner stuff
-	private static ArrayList<DCSScannerInfo> mSNAPIList = new ArrayList<DCSScannerInfo>();
-	private static ArrayList<DCSScannerInfo> mScannerInfoList = new ArrayList<DCSScannerInfo>();
+	private static ArrayList<DCSScannerInfo> mDeviceList = new ArrayList<DCSScannerInfo>();
+  private static ArrayList<DCSScannerInfo> mScannerInfoList = new ArrayList<DCSScannerInfo>();
+
+  // Compatible devices
+  private static String[] compatibleDevices = {"PL3307", "DS457", "DS4308", "LS2208", "DS6878", "MP6210", "CS4070", "LI4278", "DS6878", "RFD8500", "DS3678", "LI3678"};
 
 	public void init() {
 		sdkHandler = new SDKHandler(this.cordova.getActivity().getApplicationContext());
@@ -110,48 +115,77 @@ public class BarcodeScanner extends CordovaPlugin {
 		}
 	}
 
-	// Attempts to get connected USB scanner info.
+	// Attempts to get connected USB & BLUETOOTH scanner info.
 	// If one is not found, send a pairing barcode (base64 encoded JPEG) back to client.
 	public JSONObject getScannerInfo(int idx) throws JSONException {
-		// USB Scanner detection
-		mSNAPIList.clear();
+
+  	// Scanner device detection
+		mDeviceList.clear();
 		updateScannerList();
+
 		for(DCSScannerInfo device:getActualScannersList()) {
-			if(device.getConnectionType() == DCSSDKDefs.DCSSDK_CONN_TYPES.DCSSDK_CONNTYPE_USB_SNAPI) {
-				mSNAPIList.add(device);
-				Log.d("ScannerListEvent", "--------FOUND USB SCANNER--------");
-			}
-		}
+
+      // Here control if the scanner is a compatible device
+      if (checkDeviceCompatibility(device.getScannerName())) {
+        if(device.getConnectionType() == DCSSDKDefs.DCSSDK_CONN_TYPES.DCSSDK_CONNTYPE_USB_SNAPI) {
+          mDeviceList.add(device);
+          Log.d("ScannerListEvent", "--------FOUND USB SCANNER--------");
+        } else if(device.getConnectionType() == DCSSDKDefs.DCSSDK_CONN_TYPES.DCSSDK_CONNTYPE_BT_NORMAL) {
+          mDeviceList.add(device);
+          Log.d("ScannerListEvent", "--------FOUND BT SCANNER--------");
+        }
+      }
+
+    }
+
+    // Prepare response
+    JSONObject result = new JSONObject();
+    String connectionBarcode = getSnapiBarcode();
+    String bluetoothBarcode = getBTBarcode();
 
 		// If no scanners, we need to send a pairing barcode
 		// Else attach the requested or default scanner.
-		if(mSNAPIList.size() == 0) {
-			Log.d("ScannerListEvent", "No USB scanners found");
-			String connectionBarcode = getSnapiBarcode();
+		if(mDeviceList.size() == 0) {
 
-			JSONObject result = new JSONObject();
+			Log.d("ScannerListEvent", "No scanners found");
 			result.put("status", "pairingRequired");
 			result.put("connectionBarcode", connectionBarcode);
+      result.put("connectionBTBarcode", bluetoothBarcode);
 
-			return result;
 		} else {
-			Log.d("ScannerListEvent", mSNAPIList.size() + " scanners found");
 
-			if(idx + 1 > mSNAPIList.size()) {
+			Log.d("ScannerListEvent", mDeviceList.size() + " scanners found");
+
+			if(idx + 1 > mDeviceList.size()) {
 				idx = 0;
-			}
+      }
 
-			int scannerId = mSNAPIList.get(idx).getScannerID();
+      // Scanner details
+      DCSScannerInfo scanner = mDeviceList.get(idx);
+      int scannerId = scanner.getScannerID();
+      String scannerName = scanner.getScannerName();
 
-			sdkHandler.dcssdkEstablishCommunicationSession(scannerId);
+      DCSSDKDefs.DCSSDK_RESULT connection = sdkHandler.dcssdkEstablishCommunicationSession(scannerId);
 
-			JSONObject result = new JSONObject();
+      // Check scanner connection
+      if (connection == DCSSDKDefs.DCSSDK_RESULT.DCSSDK_RESULT_SUCCESS) {
 
-			result.put("status", "paired");
-			result.put("message", "Paired to scanner: " + scannerId);
+        Log.d("Scanner connection", "success");
+        result.put("status", "paired");
+        result.put("name", scannerName);
+			  result.put("id", scannerId);
 
-			return result;
-		}
+      } else {
+
+        Log.d("Scanner connection", "failed");
+        result.put("status", "pairingRequired");
+        result.put("connectionBarcode", connectionBarcode);
+        result.put("connectionBTBarcode", bluetoothBarcode);
+
+      }
+    }
+
+    return result;
 	}
 
 	@Override
@@ -205,7 +239,21 @@ public class BarcodeScanner extends CordovaPlugin {
 
 	private List<DCSScannerInfo> getActualScannersList() {
 		return mScannerInfoList;
-	}
+  }
+
+  private Boolean checkDeviceCompatibility(String deviceName) {
+
+    Boolean compatible = false;
+
+    for (String device: compatibleDevices) {
+      if(deviceName.contains(device)) {
+        compatible = true;
+      }
+    }
+
+    return compatible;
+
+  }
 
 	// The official docs have this display a native view
 	// with the barcode. Here we prefer to send the code back
@@ -215,6 +263,19 @@ public class BarcodeScanner extends CordovaPlugin {
 		barCodeView.setSize(500, 100);
 		return base64Encode(getBitmapFromView(barCodeView), Bitmap.CompressFormat.JPEG, 100);
 	}
+
+  private String getBTBarcode() {
+
+    // For now only legacy protocol and current settings
+    //DCSSDKDefs.DCSSDK_BT_PROTOCOL protocol = DCSSDKDefs.DCSSDK_BT_PROTOCOL.SSI_BT_CRADLE_HOST;
+    DCSSDKDefs.DCSSDK_BT_PROTOCOL protocol = DCSSDKDefs.DCSSDK_BT_PROTOCOL.LEGACY_B;
+    DCSSDKDefs.DCSSDK_BT_SCANNER_CONFIG config = DCSSDKDefs.DCSSDK_BT_SCANNER_CONFIG.KEEP_CURRENT;
+
+    BarCodeView barCodeView = sdkHandler.dcssdkGetPairingBarcode(protocol, config);
+		barCodeView.setSize(500, 100);
+		return base64Encode(getBitmapFromView(barCodeView), Bitmap.CompressFormat.JPEG, 100);
+
+  }
 
 	// Convert native view to bitmap
 	private static Bitmap getBitmapFromView(BarCodeView view) {
