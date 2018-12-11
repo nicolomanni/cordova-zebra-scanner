@@ -41,7 +41,7 @@
 			</feature>
 		</config-file>
 
-		<config-file target="AndroidManifest.xml" parent="/manifest" mode="merge">
+		<config-file target="app/src/main/AndroidManifest.xml" parent="/manifest" mode="merge">
 			<uses-permission android:name="android.permission.BLUETOOTH" />
 			<uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
 		</config-file>
