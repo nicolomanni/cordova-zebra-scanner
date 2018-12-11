@@ -6,7 +6,7 @@ import android.util.Log;
 * Helper class
 */
 public class Constants {
-	public static final String PREFS_NAME = "BarcodeScannerPrefs";
+	public static final String PREFS_NAME = "ZebraBarcodeScannerPrefs";
 
 	//For Debugging
 	public static final boolean DEBUG = true;

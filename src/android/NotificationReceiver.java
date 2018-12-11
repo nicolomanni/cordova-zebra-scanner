@@ -37,12 +37,12 @@ public class NotificationReceiver extends BroadcastReceiver implements IDcsSdkAp
 				DCSSDKDefs.DCSSDK_EVENT.DCSSDK_EVENT_BARCODE.value;
 
 
-		BarcodeScanner.sdkHandler.dcssdkEnableAvailableScannersDetection(true);
-    BarcodeScanner.sdkHandler.dcssdkSetOperationalMode(DCSSDKDefs.DCSSDK_MODE.DCSSDK_OPMODE_SNAPI);
-    BarcodeScanner.sdkHandler.dcssdkSetOperationalMode(DCSSDKDefs.DCSSDK_MODE.DCSSDK_OPMODE_BT_NORMAL);
-    BarcodeScanner.sdkHandler.dcssdkSubsribeForEvents(notifications_mask);
+		ZebraBarcodeScanner.sdkHandler.dcssdkEnableAvailableScannersDetection(true);
+    ZebraBarcodeScanner.sdkHandler.dcssdkSetOperationalMode(DCSSDKDefs.DCSSDK_MODE.DCSSDK_OPMODE_SNAPI);
+    ZebraBarcodeScanner.sdkHandler.dcssdkSetOperationalMode(DCSSDKDefs.DCSSDK_MODE.DCSSDK_OPMODE_BT_NORMAL);
+    ZebraBarcodeScanner.sdkHandler.dcssdkSubsribeForEvents(notifications_mask);
 
-		BarcodeScanner.sdkHandler.dcssdkSetDelegate(this);
+		ZebraBarcodeScanner.sdkHandler.dcssdkSetDelegate(this);
 	}
 
 	@Override
@@ -59,7 +59,7 @@ public class NotificationReceiver extends BroadcastReceiver implements IDcsSdkAp
 	public void dcssdkEventScannerAppeared(DCSScannerInfo scanner) {
 		Log.d("ScannerListEvent", "GOT DCSScanner Info - Scanner Appeared");
 		try {
-			BarcodeScanner.broadcastScannerPluggedIn();
+			ZebraBarcodeScanner.broadcastScannerPluggedIn();
 		} catch(JSONException err) {
 			Log.e("ScannerListEvent", "ERROR broadcasting puggedin event.");
 		}
@@ -67,10 +67,10 @@ public class NotificationReceiver extends BroadcastReceiver implements IDcsSdkAp
 
 	@Override
 	public void dcssdkEventScannerDisappeared(int scannerId) {
-		BarcodeScanner.sdkHandler.dcssdkTerminateCommunicationSession(scannerId);
+		ZebraBarcodeScanner.sdkHandler.dcssdkTerminateCommunicationSession(scannerId);
 		Log.d("ScannerListEvent", "GOT DCSScanner Info - Scanner Disappeared");
 		try {
-			BarcodeScanner.broadcastScannerUnplugged();
+			ZebraBarcodeScanner.broadcastScannerUnplugged();
 		} catch(JSONException err) {
 			Log.e("ScannerListEvent", "ERROR broadcasting unplugged event.");
 		}
@@ -80,7 +80,7 @@ public class NotificationReceiver extends BroadcastReceiver implements IDcsSdkAp
 	public void dcssdkEventCommunicationSessionEstablished(DCSScannerInfo var1) {
 		Log.d("ScannerListEvent", "GOT DCSScanner Info - Communication Session Established");
 		try {
-			BarcodeScanner.broadcastScannerConnected();
+			ZebraBarcodeScanner.broadcastScannerConnected();
 		} catch(JSONException err) {
 			Log.e("ScannerListEvent", "ERROR broadcasting connected event.");
 		}
@@ -90,7 +90,7 @@ public class NotificationReceiver extends BroadcastReceiver implements IDcsSdkAp
 	public void dcssdkEventCommunicationSessionTerminated(int var1) {
 		Log.d("ScannerListEvent", "GOT DCSScanner Info - Communication Session Terminated");
 		try {
-			BarcodeScanner.broadcastScannerDisconnected();
+			ZebraBarcodeScanner.broadcastScannerDisconnected();
 		} catch(JSONException err) {
 			Log.e("ScannerListEvent", "ERROR broadcasting disconnected event.");
 		}
@@ -101,7 +101,7 @@ public class NotificationReceiver extends BroadcastReceiver implements IDcsSdkAp
 		Log.d("ScannerListEvent", "GOT DCSScanner Info - Got Barcode");
 		Log.d("ScannerListEvent", "\nType: " + BarcodeTypes.getBarcodeTypeName(barcodeType) + ".\n From scanner: " + fromScannerId + ".\n Data: " + new String(barcodeData));
 		try {
-			BarcodeScanner.broadcastBarcodeReceived(new String(barcodeData), BarcodeTypes.getBarcodeTypeName(barcodeType), fromScannerId);
+			ZebraBarcodeScanner.broadcastBarcodeReceived(new String(barcodeData), BarcodeTypes.getBarcodeTypeName(barcodeType), fromScannerId);
 		} catch(JSONException err) {
 			Log.e("ScannerListEvent", "ERROR broadcasting barcode.");
 		}

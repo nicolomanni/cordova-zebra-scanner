@@ -28,7 +28,7 @@
 	</engines>
 
 	<!-- interface -->
-	<js-module src="www/barcodescanner.js" name="BarcodeScanner">
+	<js-module src="www/barcodescanner.js" name="ZebraBarcodeScanner">
 		<clobbers target="plugin.barcodescanner" />
 		<clobbers target="cordova.plugins.barcodescanner" />
 	</js-module>
@@ -36,8 +36,8 @@
 	<!-- android -->
 	<platform name="android">
 		<config-file target="res/xml/config.xml" parent="/*">
-			<feature name="BarcodeScanner">
-				<param name="android-package" value="com.michaelmay.cordova.plugin.barcodescanner.BarcodeScanner" />
+			<feature name="ZebraBarcodeScanner">
+				<param name="android-package" value="com.michaelmay.cordova.plugin.barcodescanner.ZebraBarcodeScanner" />
 			</feature>
 		</config-file>
 
@@ -49,7 +49,7 @@
 		<framework src="src/android/build.gradle" custom="true" type="gradleReference" />
 		<source-file src="src/android/libs/zebrasdk.jar" target-dir="libs/" />
 
-		<source-file src="src/android/BarcodeScanner.java" target-dir="src/com/michaelmay/cordova/plugin/barcodescanner" />
+		<source-file src="src/android/ZebraBarcodeScanner.java" target-dir="src/com/michaelmay/cordova/plugin/barcodescanner" />
 		<source-file src="src/android/NotificationReceiver.java" target-dir="src/com/michaelmay/cordova/plugin/barcodescanner" />
 		<source-file src="src/android/barcode/BarcodeTypes.java" target-dir="src/com/michaelmay/cordova/plugin/barcodescanner/barcode" />
 		<source-file src="src/android/Constants.java" target-dir="src/com/michaelmay/cordova/plugin/barcodescanner" />
